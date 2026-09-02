@@ -1,0 +1,28 @@
+The web app (artifacts/supportdesk-web) is missing an entire Admin feature that already exists and works in the mobile app (artifacts/supportdesk). Please add feature parity for it.
+
+## What's missing
+In the mobile app, there's an Admin "Access" screen (`artifacts/supportdesk/app/(admin)/access.tsx`) that lets an admin:
+
+1. **Create a new user account** — a form with name, email, and password, using the `useCreateAdminUser` hook from `@workspace/api-client-react`.
+2. **Grant a user access to a product** — pick/type a product name, and optionally set a **start date** and **end date** for that access period, using `useCreateAdminUserProduct`.
+3. **Edit an existing product access grant** — change its start date / end date, or approval status, using `useUpdateAdminUserProduct`.
+4. **Remove a product access grant** — using `useDeleteAdminUserProduct`.
+5. **List all users and their granted products** — using `useGetAdminUsers`, `useGetAdminUserProducts`, and `useGetDistinctProductNames` for a product name autocomplete/picker.
+
+All of these hooks already exist in the shared `@workspace/api-client-react` package (already a dependency of `artifacts/supportdesk-web` per its package.json) and talk to the same `api-server` backend the mobile app uses — so no backend or API changes should be needed. This is purely a missing frontend screen on web.
+
+## What to build
+Add an "Access Control" admin page to the web app (e.g. `/admin/access` route) with:
+- A "Create user" form (name, email, password) using `useCreateAdminUser`.
+- A user list/table showing each user and their currently granted products (name, start date, end date, status).
+- An "Add product access" form/dialog per user: product name (autocomplete from `useGetDistinctProductNames`), start date picker, end date picker, using `useCreateAdminUserProduct`.
+- Inline edit for an existing grant's start/end date and status using `useUpdateAdminUserProduct`.
+- A delete/remove action per grant using `useDeleteAdminUserProduct`.
+- Add this page to the admin sidebar/nav alongside the existing admin sections (dashboard, analytics, user-stats, audit-log) so it's actually reachable.
+
+## Constraints
+- Reuse the existing shared hooks from `@workspace/api-client-react` exactly as the mobile app does — don't write new API calls or duplicate logic.
+- Match the existing web app's design system (shadcn/radix components, same styling conventions already used elsewhere in `artifacts/supportdesk-web`) rather than copying mobile UI patterns 1:1 — use a proper web form/table layout, not a mobile-style modal stack.
+- Don't modify `artifacts/supportdesk` (mobile) or the database/API — this is additive, web-only frontend work.
+- After building, run `pnpm run typecheck` and fix any errors.
+- Show me the result before considering this done — I need to be able to create a user, grant them a product with a start/end date, edit it, and delete it, all from the web app.

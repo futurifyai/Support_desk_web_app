@@ -21,13 +21,14 @@ import { Link, Route, Switch, useLocation, useParams, Redirect, Router as Wouter
 import {
   Activity, AlertCircle, ArrowLeft, ArrowUpRight, BarChart3, Bell, BookOpen,
   Check, CheckCircle2, ChevronDown, CircleHelp, Clock3, Download, Inbox,
-  LayoutDashboard, LogOut, Menu, MessageCircle, MoreHorizontal, Plus, Search,
+  KeyRound, LayoutDashboard, LogOut, Menu, MessageCircle, MoreHorizontal, Plus, Search,
   Send, Settings, ShieldCheck, SlidersHorizontal, Sparkles, Tag,
   Paperclip, Ticket as TicketIcon, TrendingUp, Users, X, Zap,
 } from 'lucide-react';
 import { ErrorBoundary } from '@/components/error-boundary';
 import { Toaster } from '@/components/ui/toaster';
 import { TooltipProvider } from '@/components/ui/tooltip';
+import AccessControlPage from './access-control-page';
 
 const queryClient = new QueryClient();
 const TOKEN_KEY = 'supportdesk.web.token';
@@ -89,6 +90,7 @@ const nav = [
   { href: '/tickets', label: 'Tickets', icon: TicketIcon },
   { href: '/customers', label: 'Customers', icon: Users, admin: true },
   { href: '/analytics', label: 'Analytics', icon: BarChart3, admin: true },
+  { href: '/admin/access', label: 'Access control', icon: KeyRound, admin: true },
   { href: '/help', label: 'Help center', icon: BookOpen },
 ];
 
@@ -287,7 +289,7 @@ function CustomersRoute() { return null; }
 function AdminRoute({ children, user }: { children: ReactNode; user: Profile }) { return user.role === 'admin' ? <>{children}</> : <Redirect to="/tickets" />; }
 
 function ProtectedRouter({ user }: { user: Profile }) {
-  return <Shell user={user}><Switch><Route path="/dashboard"><AdminRoute user={user}><Dashboard /></AdminRoute></Route><Route path="/tickets/:ticketId"><TicketDetailPage user={user} /></Route><Route path="/tickets"><TicketsPage user={user} /></Route><Route path="/customers"><AdminRoute user={user}><CustomersPage /></AdminRoute></Route><Route path="/analytics"><AdminRoute user={user}><AnalyticsPage /></AdminRoute></Route><Route path="/settings"><SettingsPage user={user} /></Route><Route path="/help"><HelpPage /></Route><Route path="/help/:slug"><HelpArticlePage /></Route><Route path="/new-ticket"><NewTicketPage /></Route><Route><Redirect to={user.role === 'admin' ? '/dashboard' : '/tickets'} /></Route></Switch></Shell>;
+  return <Shell user={user}><Switch><Route path="/dashboard"><AdminRoute user={user}><Dashboard /></AdminRoute></Route><Route path="/tickets/:ticketId"><TicketDetailPage user={user} /></Route><Route path="/tickets"><TicketsPage user={user} /></Route><Route path="/customers"><AdminRoute user={user}><CustomersPage /></AdminRoute></Route><Route path="/analytics"><AdminRoute user={user}><AnalyticsPage /></AdminRoute></Route><Route path="/admin/access"><AdminRoute user={user}><AccessControlPage /></AdminRoute></Route><Route path="/settings"><SettingsPage user={user} /></Route><Route path="/help"><HelpPage /></Route><Route path="/help/:slug"><HelpArticlePage /></Route><Route path="/new-ticket"><NewTicketPage /></Route><Route><Redirect to={user.role === 'admin' ? '/dashboard' : '/tickets'} /></Route></Switch></Shell>;
 }
 
 function HelpArticlePage() {
