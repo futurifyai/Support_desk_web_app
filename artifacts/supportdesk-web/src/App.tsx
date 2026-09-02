@@ -307,7 +307,7 @@ function Router() {
   if (!token) return <Switch><Route path="/login" component={LoginPage} /><Route path="/" component={AuthPage} /><Route><Redirect to="/login" /></Route></Switch>;
   if (profile.isLoading) return <AuthPage />;
   if (profile.error || !profile.data?.data) return <Switch><Route path="/login" component={LoginPage} /><Route><SessionExpired /></Route></Switch>;
-  return <Switch><Route path="/login"><Redirect to={profile.data.data.role === 'admin' ? '/dashboard' : '/tickets'} /></Route><Route path="/"><ProtectedRouter user={profile.data.data} /></Route></Switch>;
+  return <Switch><Route path="/login"><Redirect to={profile.data.data.role === 'admin' ? '/dashboard' : '/tickets'} /></Route><Route><ProtectedRouter user={profile.data.data} /></Route></Switch>;
 }
 function SessionExpired() { const [, setLocation] = useLocation(); return <div className="flex min-h-[100dvh] items-center justify-center bg-[#222a3c] px-6 text-center text-[#f8f2e7]"><div className="max-w-sm"><AlertCircle size={30} className="mx-auto text-primary" /><h1 className="mt-5 text-2xl font-bold">Your session has ended.</h1><p className="mt-2 text-sm text-[#aeb4c0]">Sign in again to continue working in supportdesk.</p><Button className="mt-6" onClick={() => { localStorage.removeItem(TOKEN_KEY); setLocation('/login'); }}>Return to sign in</Button></div></div>; }
 
