@@ -111,17 +111,14 @@ function isTextMediaType(mediaType: string | null): boolean {
   );
 }
 
-// Use strict equality: in browsers, `response.body` is `null` when the
-// response genuinely has no content.  In React Native, `response.body` is
-// always `undefined` because the ReadableStream API is not implemented —
-// even when the response carries a full payload readable via `.text()` or
-// `.json()`.  Loose equality (`== null`) matches both `null` and `undefined`,
-// which causes every React Native response to be treated as empty.
+// React Native fetch implementations may report `response.body` as `null`
+// even when the response still contains JSON readable via `.text()` or
+// `.json()`.  Determine empty responses from the HTTP contract instead of
+// the optional ReadableStream property.
 function hasNoBody(response: Response, method: string): boolean {
   if (method === "HEAD") return true;
   if (NO_BODY_STATUS.has(response.status)) return true;
   if (response.headers.get("content-length") === "0") return true;
-  if (response.body === null) return true;
   return false;
 }
 

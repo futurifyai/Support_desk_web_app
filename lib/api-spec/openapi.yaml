@@ -3,20 +3,22 @@ info:
   # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: SupportDesk API
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
-    description: Health operations
+  - name: auth
+  - name: tickets
+  - name: admin
+  - name: help
 paths:
   /healthz:
     get:
       operationId: healthCheck
       tags: [health]
       summary: Health check
-      description: Returns server health status
       responses:
         "200":
           description: Healthy
@@ -24,13 +26,1998 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  /auth/login:
+    post:
+      operationId: login
+      tags: [auth]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginRequest"
+      responses:
+        "200":
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+
+  /auth/password-reset/request:
+    post:
+      operationId: requestPasswordReset
+      tags: [auth]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PasswordResetRequestBody"
+      responses:
+        "200":
+          description: Reset email sent (account-enumeration-safe)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+
+  /auth/password-reset/confirm:
+    post:
+      operationId: confirmPasswordReset
+      tags: [auth]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PasswordResetConfirmBody"
+      responses:
+        "200":
+          description: Password reset
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+
+  /auth/profile:
+    get:
+      operationId: getProfile
+      tags: [auth]
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Profile fetched
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProfileResponse"
+    patch:
+      operationId: updateProfile
+      tags: [auth]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateProfileRequest"
+      responses:
+        "200":
+          description: Profile updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProfileResponse"
+
+  /auth/push-token:
+    post:
+      operationId: registerPushToken
+      tags: [auth]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PushTokenRequest"
+      responses:
+        "200":
+          description: Push token registered
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+
+  /tickets:
+    get:
+      operationId: getTickets
+      tags: [tickets]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: search
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: status
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [open, in-progress, resolved]
+        - name: startDate
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date
+        - name: endDate
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date
+        - name: category
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [bug, feature, billing, account, other]
+        - name: priority
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [low, medium, high, critical]
+        - name: page
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: pageSize
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 30
+      responses:
+        "200":
+          description: Tickets fetched
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TicketsResponse"
+    post:
+      operationId: createTicket
+      tags: [tickets]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateTicketRequest"
+      responses:
+        "201":
+          description: Ticket created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TicketResponse"
+
+  /tickets/satisfaction:
+    get:
+      operationId: getTicketSatisfaction
+      tags: [tickets]
+      security:
+        - bearerAuth: []
+      summary: Customer satisfaction summary
+      responses:
+        "200":
+          description: Satisfaction summary fetched
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserSatisfactionResponse"
+
+  /users/me/products:
+    get:
+      operationId: getMyProducts
+      tags: [tickets]
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Authenticated user's product access
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserProductsResponse"
+
+  /tickets/{ticketId}:
+    get:
+      operationId: getUserTicketDetail
+      tags: [tickets]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: ticketId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Ticket detail with replies
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserTicketDetailResponse"
+
+  /tickets/{ticketId}/replies:
+    post:
+      operationId: createUserTicketReply
+      tags: [tickets]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: ticketId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateReplyRequest"
+      responses:
+        "201":
+          description: Reply posted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReplyResponse"
+
+  /tickets/{ticketId}/rating:
+    patch:
+      operationId: rateTicket
+      tags: [tickets]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: ticketId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RateTicketRequest"
+      responses:
+        "200":
+          description: Ticket rated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserTicketDetailResponse"
+
+  /tickets/{ticketId}/attachments:
+    get:
+      operationId: getTicketAttachments
+      tags: [tickets]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: ticketId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Attachments fetched
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AttachmentsResponse"
+    post:
+      operationId: uploadTicketAttachment
+      tags: [tickets]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: ticketId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UploadAttachmentRequest"
+      responses:
+        "201":
+          description: Attachment uploaded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AttachmentResponse"
+
+  /admin/analytics:
+    get:
+      operationId: getAdminAnalytics
+      tags: [admin]
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Analytics summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminAnalyticsResponse"
+
+  /admin/users/ticket-stats:
+    get:
+      operationId: getAdminUserTicketStats
+      tags: [admin]
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Per-user ticket frequency with timestamps
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserTicketStatsResponse"
+
+  /admin/users:
+    get:
+      operationId: getAdminUsers
+      tags: [admin]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: search
+          in: query
+          required: false
+          schema:
+            type: string
+            maxLength: 120
+        - name: page
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: pageSize
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 30
+      responses:
+        "200":
+          description: User directory
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminUsersResponse"
+    post:
+      operationId: createAdminUser
+      tags: [admin]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateAdminUserRequest"
+      responses:
+        "201":
+          description: Customer account created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CreateAdminUserResponse"
+
+  /admin/users/{userId}/products:
+    get:
+      operationId: getAdminUserProducts
+      tags: [admin]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Product access for one user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserProductsResponse"
+    post:
+      operationId: createAdminUserProduct
+      tags: [admin]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateUserProductRequest"
+      responses:
+        "201":
+          description: Product access added
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserProductResponse"
+
+  /admin/users/{userId}/products/{productId}:
+    patch:
+      operationId: updateAdminUserProduct
+      tags: [admin]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: productId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateUserProductRequest"
+      responses:
+        "200":
+          description: Product access updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserProductResponse"
+    delete:
+      operationId: deleteAdminUserProduct
+      tags: [admin]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: productId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Product access removed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DeletedUserProductResponse"
+
+  /admin/products/distinct:
+    get:
+      operationId: getDistinctProductNames
+      tags: [admin]
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Existing product names
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProductNamesResponse"
+
+  /admin/tickets:
+    get:
+      operationId: getAdminTickets
+      tags: [admin]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: search
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: status
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [open, in-progress, resolved]
+        - name: startDate
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date
+        - name: endDate
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date
+        - name: category
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [bug, feature, billing, account, other]
+        - name: priority
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [low, medium, high, critical]
+      responses:
+        "200":
+          description: All tickets
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminTicketsResponse"
+
+  /admin/tickets/{ticketId}:
+    get:
+      operationId: getAdminTicketDetail
+      tags: [admin]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: ticketId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Ticket detail
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminTicketDetailResponse"
+
+  /admin/tickets/{ticketId}/status:
+    patch:
+      operationId: updateTicketStatus
+      tags: [admin]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: ticketId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateStatusRequest"
+      responses:
+        "200":
+          description: Status updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminTicketDetailResponse"
+
+  /admin/tickets/{ticketId}/priority:
+    patch:
+      operationId: updateTicketPriority
+      tags: [admin]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: ticketId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdatePriorityRequest"
+      responses:
+        "200":
+          description: Priority updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminTicketDetailResponse"
+
+  /admin/tickets/{ticketId}/assign:
+    patch:
+      operationId: assignTicket
+      tags: [admin]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: ticketId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AssignTicketRequest"
+      responses:
+        "200":
+          description: Ticket assigned
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminTicketDetailResponse"
+
+  /admin/tickets/{ticketId}/replies:
+    get:
+      operationId: getTicketReplies
+      tags: [admin]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: ticketId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Replies fetched
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RepliesResponse"
+    post:
+      operationId: createTicketReply
+      tags: [admin]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: ticketId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateReplyRequest"
+      responses:
+        "201":
+          description: Reply posted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReplyResponse"
+
+  /admin/agents:
+    get:
+      operationId: getAdminAgents
+      tags: [admin]
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Admin agents list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AgentsResponse"
+
+  /admin/analytics/export.csv:
+    get:
+      operationId: exportAnalyticsCsv
+      tags: [admin]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: startDate
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date
+        - name: endDate
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date
+        - name: status
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [open, in-progress, resolved]
+        - name: priority
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [low, medium, high, critical]
+      responses:
+        "200":
+          description: CSV file of tickets (bounded to 5000 rows)
+          content:
+            text/csv:
+              schema:
+                type: string
+
+  /admin/analytics/export.pdf:
+    get:
+      operationId: exportAnalyticsPdf
+      tags: [admin]
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: PDF summary report of recent tickets
+          content:
+            application/pdf:
+              schema:
+                type: string
+                format: binary
+
+  /admin/audit-logs:
+    get:
+      operationId: getAuditLogs
+      tags: [admin]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: page
+          in: query
+          required: false
+          schema:
+            type: integer
+        - name: pageSize
+          in: query
+          required: false
+          schema:
+            type: integer
+        - name: action
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: resourceType
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: actorId
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Audit logs fetched
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuditLogsResponse"
+
+  /help/articles:
+    get:
+      operationId: getHelpArticles
+      tags: [help]
+      parameters:
+        - name: search
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: category
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [bug, feature, billing, account, other, general]
+      responses:
+        "200":
+          description: Help articles
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HelpArticlesResponse"
+
+  /help/articles/suggested:
+    get:
+      operationId: getSuggestedArticles
+      tags: [help]
+      parameters:
+        - name: category
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [bug, feature, billing, account, other]
+      responses:
+        "200":
+          description: Suggested articles
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HelpArticlesResponse"
+
+  /help/articles/{slug}:
+    get:
+      operationId: getHelpArticle
+      tags: [help]
+      parameters:
+        - name: slug
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Single help article
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HelpArticleResponse"
+
 components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
   schemas:
+    PasswordResetRequestBody:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+      required: [email]
+
+    PasswordResetConfirmBody:
+      type: object
+      properties:
+        token:
+          type: string
+        password:
+          type: string
+          minLength: 8
+      required: [token, password]
+
+    UserProfileFull:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        email:
+          type: string
+        role:
+          type: string
+          enum: [user, admin]
+        createdAt:
+          type: string
+          format: date-time
+        token:
+          type: string
+          description: Replacement session token, returned only after a password change.
+      required: [id, name, email, role, createdAt]
+
+    ProfileResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        message:
+          type: string
+        data:
+          $ref: "#/components/schemas/UserProfileFull"
+      required: [success, message, data]
+
+    UpdateProfileRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        currentPassword:
+          type: string
+        newPassword:
+          type: string
+          minLength: 8
+
+    HelpArticle:
+      type: object
+      properties:
+        id:
+          type: string
+        slug:
+          type: string
+        title:
+          type: string
+        body:
+          type: string
+        category:
+          type: string
+          enum: [bug, feature, billing, account, other, general]
+        tags:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+      required: [id, slug, title, body, category, tags, createdAt, updatedAt]
+
+    HelpArticlesResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        message:
+          type: string
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/HelpArticle"
+      required: [success, message, data]
+
+    HelpArticleResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        message:
+          type: string
+        data:
+          $ref: "#/components/schemas/HelpArticle"
+      required: [success, message, data]
+
+    AuditLog:
+      type: object
+      properties:
+        id:
+          type: string
+        actorId:
+          type: string
+          nullable: true
+        actorEmail:
+          type: string
+          nullable: true
+        action:
+          type: string
+        resourceType:
+          type: string
+        resourceId:
+          type: string
+          nullable: true
+        meta:
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+      required: [id, action, resourceType, createdAt]
+
+    AuditLogsResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        message:
+          type: string
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/AuditLog"
+      required: [success, message, data]
+
+    TopAgent:
+      type: object
+      properties:
+        agentId:
+          type: string
+          nullable: true
+        agentName:
+          type: string
+        resolvedCount:
+          type: integer
+      required: [agentId, agentName, resolvedCount]
+
     HealthStatus:
       type: object
       properties:
         status:
           type: string
-      required:
-        - status
+      required: [status]
 
+    LoginRequest:
+      type: object
+      properties:
+        email:
+          type: string
+        password:
+          type: string
+      required: [email, password]
+
+    UserProfile:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        email:
+          type: string
+        role:
+          type: string
+          enum: [user, admin]
+      required: [id, name, email, role]
+
+    AdminUser:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        email:
+          type: string
+          format: email
+        role:
+          type: string
+          enum: [user, admin]
+        createdAt:
+          type: string
+          format: date-time
+      required: [id, name, email, role, createdAt]
+
+    PaginationMeta:
+      type: object
+      properties:
+        page:
+          type: integer
+        pageSize:
+          type: integer
+        total:
+          type: integer
+        totalPages:
+          type: integer
+      required: [page, pageSize, total, totalPages]
+
+    AdminUsersResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        message:
+          type: string
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/AdminUser"
+        meta:
+          $ref: "#/components/schemas/PaginationMeta"
+      required: [success, message, data, meta]
+
+    CreateAdminUserRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 2
+          maxLength: 100
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          minLength: 8
+          maxLength: 256
+      required: [name, email, password]
+
+    CreateAdminUserResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        message:
+          type: string
+        data:
+          type: object
+          properties:
+            user:
+              $ref: "#/components/schemas/AdminUser"
+            temporaryPassword:
+              type: string
+          required: [user, temporaryPassword]
+      required: [success, message, data]
+
+    UserProduct:
+      type: object
+      properties:
+        id:
+          type: string
+        userId:
+          type: string
+        productName:
+          type: string
+        startDate:
+          type: string
+          format: date-time
+          nullable: true
+        endDate:
+          type: string
+          format: date-time
+          nullable: true
+        status:
+          type: string
+          enum: [pending, approved, disapproved, expired]
+        approvedBy:
+          type: string
+          nullable: true
+        approvedAt:
+          type: string
+          format: date-time
+          nullable: true
+        expiredAt:
+          type: string
+          format: date-time
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+      required: [id, userId, productName, status, createdAt]
+
+    CreateUserProductRequest:
+      type: object
+      properties:
+        productName:
+          type: string
+          minLength: 2
+          maxLength: 120
+        startDate:
+          type: string
+          format: date
+          nullable: true
+        endDate:
+          type: string
+          format: date
+          nullable: true
+      required: [productName]
+
+    UpdateUserProductRequest:
+      type: object
+      properties:
+        productName:
+          type: string
+          minLength: 2
+          maxLength: 120
+        startDate:
+          type: string
+          format: date
+          nullable: true
+        endDate:
+          type: string
+          format: date
+          nullable: true
+        status:
+          type: string
+          enum: [approved, disapproved]
+
+    UserProductResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        message:
+          type: string
+        data:
+          $ref: "#/components/schemas/UserProduct"
+      required: [success, message, data]
+
+    UserProductsResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        message:
+          type: string
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/UserProduct"
+      required: [success, message, data]
+
+    DeletedUserProductResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        message:
+          type: string
+        data:
+          type: object
+          properties:
+            id:
+              type: string
+            productName:
+              type: string
+          required: [id, productName]
+      required: [success, message, data]
+
+    ProductNamesResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        message:
+          type: string
+        data:
+          type: array
+          items:
+            type: string
+      required: [success, message, data]
+
+    AuthResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        message:
+          type: string
+        data:
+          type: object
+          properties:
+            token:
+              type: string
+            user:
+              $ref: "#/components/schemas/UserProfile"
+          required: [token, user]
+      required: [success, message, data]
+
+    SuccessResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        message:
+          type: string
+      required: [success, message]
+
+    PushTokenRequest:
+      type: object
+      properties:
+        token:
+          type: string
+      required: [token]
+
+    Ticket:
+      type: object
+      properties:
+        id:
+          type: string
+        userId:
+          type: string
+        productName:
+          type: string
+        description:
+          type: string
+        status:
+          type: string
+          enum: [open, in-progress, resolved]
+        priority:
+          type: string
+          enum: [low, medium, high, critical]
+        category:
+          type: string
+          enum: [bug, feature, billing, account, other]
+        assignedTo:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+        rating:
+          type: integer
+          minimum: 1
+          maximum: 5
+          nullable: true
+        feedbackText:
+          type: string
+          nullable: true
+        slaDueAt:
+          type: string
+          format: date-time
+          nullable: true
+        slaEscalated:
+          type: boolean
+      required: [id, userId, productName, description, status, priority, category, createdAt, slaEscalated]
+
+    AdminTicket:
+      type: object
+      properties:
+        id:
+          type: string
+        userId:
+          type: string
+        userName:
+          type: string
+        userEmail:
+          type: string
+        productName:
+          type: string
+        description:
+          type: string
+        status:
+          type: string
+          enum: [open, in-progress, resolved]
+        priority:
+          type: string
+          enum: [low, medium, high, critical]
+        category:
+          type: string
+          enum: [bug, feature, billing, account, other]
+        assignedTo:
+          type: string
+          nullable: true
+        assignedToName:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+        rating:
+          type: integer
+          minimum: 1
+          maximum: 5
+          nullable: true
+        feedbackText:
+          type: string
+          nullable: true
+        slaDueAt:
+          type: string
+          format: date-time
+          nullable: true
+        slaEscalated:
+          type: boolean
+      required: [id, userId, userName, userEmail, productName, description, status, priority, category, createdAt, slaEscalated]
+
+    TicketReply:
+      type: object
+      properties:
+        id:
+          type: string
+        ticketId:
+          type: string
+        authorId:
+          type: string
+        authorName:
+          type: string
+        authorRole:
+          type: string
+          enum: [admin, user]
+        message:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+      required: [id, ticketId, authorId, authorName, authorRole, message, createdAt]
+
+    Attachment:
+      type: object
+      properties:
+        id:
+          type: string
+        ticketId:
+          type: string
+        uploadedBy:
+          type: string
+        fileName:
+          type: string
+        mimeType:
+          type: string
+        fileSize:
+          type: integer
+        url:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+      required: [id, ticketId, uploadedBy, fileName, mimeType, fileSize, url, createdAt]
+
+    Agent:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        email:
+          type: string
+      required: [id, name, email]
+
+    UserTicketDetail:
+      type: object
+      properties:
+        id:
+          type: string
+        userId:
+          type: string
+        productName:
+          type: string
+        description:
+          type: string
+        status:
+          type: string
+          enum: [open, in-progress, resolved]
+        priority:
+          type: string
+          enum: [low, medium, high, critical]
+        category:
+          type: string
+          enum: [bug, feature, billing, account, other]
+        assignedTo:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+        replies:
+          type: array
+          items:
+            $ref: "#/components/schemas/TicketReply"
+        attachments:
+          type: array
+          items:
+            $ref: "#/components/schemas/Attachment"
+        rating:
+          type: integer
+          nullable: true
+        feedbackText:
+          type: string
+          nullable: true
+        slaDueAt:
+          type: string
+          format: date-time
+          nullable: true
+        slaEscalated:
+          type: boolean
+      required: [id, userId, productName, description, status, priority, category, createdAt, replies, attachments, slaEscalated]
+
+    AdminTicketDetail:
+      type: object
+      properties:
+        id:
+          type: string
+        userId:
+          type: string
+        userName:
+          type: string
+        userEmail:
+          type: string
+        productName:
+          type: string
+        description:
+          type: string
+        status:
+          type: string
+          enum: [open, in-progress, resolved]
+        priority:
+          type: string
+          enum: [low, medium, high, critical]
+        category:
+          type: string
+          enum: [bug, feature, billing, account, other]
+        assignedTo:
+          type: string
+          nullable: true
+        assignedToName:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+        replies:
+          type: array
+          items:
+            $ref: "#/components/schemas/TicketReply"
+        attachments:
+          type: array
+          items:
+            $ref: "#/components/schemas/Attachment"
+        rating:
+          type: integer
+          nullable: true
+        feedbackText:
+          type: string
+          nullable: true
+        slaDueAt:
+          type: string
+          format: date-time
+          nullable: true
+        slaEscalated:
+          type: boolean
+      required: [id, userId, userName, userEmail, productName, description, status, priority, category, createdAt, replies, attachments, slaEscalated]
+
+    CreateTicketRequest:
+      type: object
+      properties:
+        productName:
+          type: string
+        description:
+          type: string
+        priority:
+          type: string
+          enum: [low, medium, high, critical]
+        category:
+          type: string
+          enum: [bug, feature, billing, account, other]
+      required: [productName, description]
+
+    UpdateStatusRequest:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [open, in-progress, resolved]
+      required: [status]
+
+    UpdatePriorityRequest:
+      type: object
+      properties:
+        priority:
+          type: string
+          enum: [low, medium, high, critical]
+      required: [priority]
+
+    AssignTicketRequest:
+      type: object
+      properties:
+        agentId:
+          type: string
+          nullable: true
+      required: [agentId]
+
+    CreateReplyRequest:
+      type: object
+      properties:
+        message:
+          type: string
+      required: [message]
+
+    RateTicketRequest:
+      type: object
+      properties:
+        rating:
+          type: integer
+          minimum: 1
+          maximum: 5
+        feedbackText:
+          type: string
+          nullable: true
+      required: [rating]
+
+    UploadAttachmentRequest:
+      type: object
+      properties:
+        fileName:
+          type: string
+        mimeType:
+          type: string
+        fileSize:
+          type: integer
+        base64Data:
+          type: string
+      required: [fileName, mimeType, fileSize, base64Data]
+
+    DailyCount:
+      type: object
+      properties:
+        date:
+          type: string
+        count:
+          type: integer
+      required: [date, count]
+
+    CategoryCount:
+      type: object
+      properties:
+        category:
+          type: string
+        count:
+          type: integer
+      required: [category, count]
+
+    AdminAnalytics:
+      type: object
+      properties:
+        totalTickets:
+          type: integer
+        openCount:
+          type: integer
+        inProgressCount:
+          type: integer
+        resolvedCount:
+          type: integer
+        criticalCount:
+          type: integer
+        highCount:
+          type: integer
+        mediumCount:
+          type: integer
+        lowCount:
+          type: integer
+        byCategory:
+          type: array
+          items:
+            $ref: "#/components/schemas/CategoryCount"
+        weeklyTrend:
+          type: array
+          items:
+            $ref: "#/components/schemas/DailyCount"
+        monthlyTrend:
+          type: array
+          items:
+            $ref: "#/components/schemas/DailyCount"
+        avgResolutionHours:
+          type: number
+          nullable: true
+        topAgents:
+          type: array
+          items:
+            $ref: "#/components/schemas/TopAgent"
+        satisfaction:
+          $ref: "#/components/schemas/AdminSatisfaction"
+      required: [totalTickets, openCount, inProgressCount, resolvedCount, criticalCount, highCount, mediumCount, lowCount, byCategory, weeklyTrend, monthlyTrend, avgResolutionHours, topAgents, satisfaction]
+
+    TicketResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        message:
+          type: string
+        data:
+          $ref: "#/components/schemas/Ticket"
+      required: [success, message, data]
+
+    TicketsResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        message:
+          type: string
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/Ticket"
+        meta:
+          $ref: "#/components/schemas/TicketSearchMeta"
+      required: [success, message, data, meta]
+
+    TicketSearchMeta:
+      type: object
+      properties:
+        page:
+          type: integer
+        pageSize:
+          type: integer
+        total:
+          type: integer
+        totalPages:
+          type: integer
+      required: [page, pageSize, total, totalPages]
+
+    RatingDistributionItem:
+      type: object
+      properties:
+        rating:
+          type: integer
+          minimum: 1
+          maximum: 5
+        count:
+          type: integer
+      required: [rating, count]
+
+    SatisfactionFeedback:
+      type: object
+      properties:
+        ticketId:
+          type: string
+        productName:
+          type: string
+        rating:
+          type: integer
+          minimum: 1
+          maximum: 5
+        feedbackText:
+          type: string
+        resolvedAt:
+          type: string
+          format: date-time
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+      required: [ticketId, productName, rating, feedbackText, resolvedAt, createdAt]
+
+    AdminSatisfaction:
+      type: object
+      properties:
+        ratedTicketCount:
+          type: integer
+        averageRating:
+          type: number
+          nullable: true
+        distribution:
+          type: array
+          items:
+            $ref: "#/components/schemas/RatingDistributionItem"
+        recentFeedback:
+          type: array
+          description: The 10 most recent written feedback entries.
+          items:
+            $ref: "#/components/schemas/SatisfactionFeedback"
+      required: [ratedTicketCount, averageRating, distribution, recentFeedback]
+
+    UserSatisfaction:
+      type: object
+      properties:
+        ratedTicketCount:
+          type: integer
+        averageRating:
+          type: number
+          nullable: true
+        distribution:
+          type: array
+          items:
+            $ref: "#/components/schemas/RatingDistributionItem"
+        recentFeedback:
+          type: array
+          items:
+            $ref: "#/components/schemas/SatisfactionFeedback"
+      required: [ratedTicketCount, averageRating, distribution, recentFeedback]
+
+    UserSatisfactionResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        message:
+          type: string
+        data:
+          $ref: "#/components/schemas/UserSatisfaction"
+      required: [success, message, data]
+
+    AdminTicketsResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        message:
+          type: string
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/AdminTicket"
+      required: [success, message, data]
+
+    AdminTicketDetailResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        message:
+          type: string
+        data:
+          $ref: "#/components/schemas/AdminTicketDetail"
+      required: [success, message, data]
+
+    AdminAnalyticsResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        message:
+          type: string
+        data:
+          $ref: "#/components/schemas/AdminAnalytics"
+      required: [success, message, data]
+
+    UserTicketDetailResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        message:
+          type: string
+        data:
+          $ref: "#/components/schemas/UserTicketDetail"
+      required: [success, message, data]
+
+    AttachmentsResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        message:
+          type: string
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/Attachment"
+      required: [success, message, data]
+
+    AttachmentResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        message:
+          type: string
+        data:
+          $ref: "#/components/schemas/Attachment"
+      required: [success, message, data]
+
+    RepliesResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        message:
+          type: string
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/TicketReply"
+      required: [success, message, data]
+
+    ReplyResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        message:
+          type: string
+        data:
+          $ref: "#/components/schemas/TicketReply"
+      required: [success, message, data]
+
+    AgentsResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        message:
+          type: string
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/Agent"
+      required: [success, message, data]
+
+    TicketSummary:
+      type: object
+      properties:
+        id:
+          type: string
+        productName:
+          type: string
+        status:
+          type: string
+          enum: [open, in-progress, resolved]
+        priority:
+          type: string
+          enum: [low, medium, high, critical]
+        category:
+          type: string
+          enum: [bug, feature, billing, account, other]
+        createdAt:
+          type: string
+          format: date-time
+      required: [id, productName, status, priority, category, createdAt]
+
+    UserTicketStat:
+      type: object
+      properties:
+        userId:
+          type: string
+        userName:
+          type: string
+        userEmail:
+          type: string
+        ticketCount:
+          type: integer
+        firstTicketAt:
+          type: string
+          format: date-time
+        lastTicketAt:
+          type: string
+          format: date-time
+        tickets:
+          type: array
+          items:
+            $ref: "#/components/schemas/TicketSummary"
+      required: [userId, userName, userEmail, ticketCount, firstTicketAt, lastTicketAt, tickets]
+
+    UserTicketStatsResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        message:
+          type: string
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/UserTicketStat"
+      required: [success, message, data]
+
+    ErrorResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        message:
+          type: string
+      required: [success, message]

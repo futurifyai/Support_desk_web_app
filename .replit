@@ -1,20 +1,57 @@
-modules = ["nodejs-24"]
+entrypoint = "index.html"
+modules = ["web", "nodejs-24", "postgresql-16"]
+
+[nix]
+channel = "stable-24_11"
+packages = ["static-web-server"]
 
 [deployment]
-router = "application"
-deploymentTarget = "autoscale"
-
-[deployment.postBuild]
-args = ["pnpm", "store", "prune"]
-env = { "CI" = "true" }
+publicDir = "/"
+deploymentTarget = "static"
 
 [workflows]
 runButton = "Project"
 
-[agent]
-stack = "PNPM_WORKSPACE"
-expertMode = true
+[[workflows.workflow]]
+name = "Serve static"
+mode = "parallel"
 
-[postMerge]
-path = "scripts/post-merge.sh"
-timeoutMs = 20000
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = """
+echo \"Serving HTML, open the Preview to see your output.
+To see changes you make, you can hit the refresh button in the preview, you do \u001B[1mnot\u001B[0m have to stop and run again.
+Console logs are available in the Preview devtools or your browser devtools.\" && static-web-server -w ./.config/static-web-server.toml
+"""
+waitForPort = 80
+
+[[ports]]
+localPort = 80
+externalPort = 80
+
+[[ports]]
+localPort = 8080
+externalPort = 8080
+
+[[ports]]
+localPort = 8081
+externalPort = 8081
+
+[[ports]]
+localPort = 8082
+externalPort = 3003
+
+[[ports]]
+localPort = 20485
+externalPort = 3000
+
+[[ports]]
+localPort = 20486
+externalPort = 4200
+
+[[ports]]
+localPort = 25919
+externalPort = 3002
+
+[agent]
+expertMode = true

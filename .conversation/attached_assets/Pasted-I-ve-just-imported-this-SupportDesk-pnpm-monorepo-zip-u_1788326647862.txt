@@ -1,0 +1,34 @@
+I've just imported this SupportDesk pnpm monorepo (zip upload) into this fresh Repl. It is NOT a static site — the `.replit` file currently has leftover static-web-server config from Replit's default template. Please fix the setup and get the real app running.
+
+## What this repo actually is
+- Root: pnpm workspace monorepo (`pnpm-workspace.yaml`), Node 24.
+- `artifacts/api-server` — Express 5 REST API. Build with `node ./build.mjs`, run with `node --enable-source-maps ./dist/index.mjs`. Reads `DATABASE_URL`, `SESSION_SECRET`, `EMAIL_USER`, `EMAIL_PASS`, `PORT` from environment.
+- `artifacts/supportdesk-web` — the web frontend (Vite + React + wouter + TanStack Query + shadcn/radix). Scripts: `dev` (vite dev server), `build` (vite build), `serve` (vite preview).
+- `artifacts/supportdesk` — the original Expo/React Native mobile app (leave this alone for now, we're only running the web app + API here).
+- `lib/db` — shared Drizzle ORM schema/client, imported by `api-server`. Connects via `DATABASE_URL`.
+- `lib/api-zod`, `lib/api-spec`, `lib/api-client-react` — shared types/hooks consumed by the web frontend.
+
+## Step 1 — Install
+Run `pnpm install` at the repo root (NOT npm/yarn — the root `preinstall` script will actively block non-pnpm installs).
+
+## Step 2 — Database: use the SAME existing database, do not create a new one
+This app must connect to the exact same PostgreSQL database that the original SupportDesk Android app and the existing SupportDesk web build already use — not a new Replit-provisioned database.
+- Add a Secret named `DATABASE_URL` in this Repl's Secrets tab and set it to the existing connection string (I will provide/paste this value myself — do not auto-generate a new Postgres database or overwrite this secret).
+- Add `SESSION_SECRET` as a Secret too, matching the same value used in the original project, so existing login sessions/JWTs from the other deployment stay compatible.
+- Add `EMAIL_USER` / `EMAIL_PASS` secrets if password-reset/email features are needed (optional, ask me if unsure).
+- Do NOT run any destructive migration or `drizzle-kit push`/`generate` against this database — the schema already exists and matches production data. Only run read/typecheck operations against it.
+
+## Step 3 — Fix the run configuration
+Replace the current static-site `.replit` workflow with a real dev workflow that runs BOTH the API server and the web frontend:
+- `artifacts/api-server`: build once, then start it (respect `PORT` env var Replit assigns, or default it sensibly, e.g. 3001).
+- `artifacts/supportdesk-web`: run its `dev` script bound to `0.0.0.0` (already configured that way in its `vite` script) on the port Replit exposes as the main webview port.
+- Make sure the web frontend's API base URL / proxy points at the running `api-server` port correctly (check `artifacts/supportdesk-web/vite.config.ts` and any `VITE_API_URL`-style env var — set it as a Secret/env var if the frontend needs to know the API's public URL, e.g. via `REPLIT_DEV_DOMAIN`).
+- Update `[deployment]` in `.replit` away from `deploymentTarget = "static"` to a proper Node web service deployment once both pieces run correctly in dev.
+
+## Step 4 — Verify
+- Confirm `pnpm run typecheck` passes.
+- Confirm the API server boots and connects to the database without errors (log output should show a successful DB connection, not a fresh/empty schema).
+- Confirm the web app loads in the Preview, and that logging in with an existing account (one that already exists in the shared database) works — this proves it's talking to the same real database, not a blank new one.
+- Report back the exact ports/URLs you configured for API and web so I can double check nothing was left pointing at localhost-only or a stale port.
+
+Do this step by step and show me the result after Steps 1–2 (install + DB secrets wired up) before touching the run/deploy configuration.

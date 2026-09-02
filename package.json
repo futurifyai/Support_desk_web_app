@@ -5,15 +5,29 @@
   "scripts": {
     "preinstall": "sh -c 'rm -f package-lock.json yarn.lock; case \"$npm_config_user_agent\" in pnpm/*) ;; *) echo \"Use pnpm instead\" >&2; exit 1 ;; esac'",
     "build": "pnpm run typecheck && pnpm -r --if-present run build",
+    "test": "pnpm --filter @workspace/api-server test",
     "typecheck:libs": "tsc --build",
     "typecheck": "pnpm run typecheck:libs && pnpm -r --filter \"./artifacts/**\" --filter \"./scripts\" --if-present run typecheck"
   },
   "private": true,
-  "dependencies": {
-    "@replit/connectors-sdk": "^0.4.1"
+  "pnpm": {
+    "overrides": {
+      "tar": "^7.5.22",
+      "shell-quote": "^1.10.0"
+    }
   },
   "devDependencies": {
-    "prettier": "^3.9.6",
-    "typescript": "~5.9.3"
+    "prettier": "^3.8.1",
+    "typescript": "~5.9.2"
+  },
+  "dependencies": {
+    "@types/supertest": "^7.2.1",
+    "expo-file-system": "~19.0.22",
+    "expo-sharing": "~14.0.8",
+    "shell-quote": "^1.10.0",
+    "supertest": "^7.2.2",
+    "tar": "^7.5.22",
+    "vitest": "^4.1.11",
+    "zod": "^4.3.6"
   }
 }

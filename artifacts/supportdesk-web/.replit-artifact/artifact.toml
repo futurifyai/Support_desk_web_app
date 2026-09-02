@@ -1,0 +1,28 @@
+kind = "web"
+previewPath = "/"
+title = "SupportDesk Web"
+description = "A browser-first support operations website for admins to triage customer tickets and customers to submit and track support requests."
+version = "1.0.0"
+id = "artifacts/supportdesk-web"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 25919
+
+[services.development]
+run = "pnpm --filter @workspace/supportdesk-web run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/supportdesk-web", "run", "build" ]
+serve = "static"
+publicDir = "artifacts/supportdesk-web/dist/public"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "25919"
+BASE_PATH = "/"

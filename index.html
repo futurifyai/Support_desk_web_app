@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.4.0/jspdf.umd.min.js"></script>
+    <title>Download PDF Example</title>
+</head>
+<body>
+    <h1>Downloadable PDF Example</h1>
+    <p>This is some content that you want to include in your PDF.</p>
+    
+    <button id="downloadPdfButton">Download PDF</button>
+
+    <script>
+        document.getElementById('downloadPdfButton').addEventListener('click', function () {
+            // Create a new jsPDF instance
+            var doc = new jsPDF();
+
+            // Add content to the PDF
+            doc.text('This is the PDF content', 10, 10);
+
+            // Save the PDF as a blob
+            var pdfBlob = doc.output('blob');
+
+            // Create a download link for the PDF
+            var link = document.createElement('a');
+            link.href = URL.createObjectURL(pdfBlob);
+            link.download = 'myPDF.pdf';
+            link.click();
+
+            // Clean up
+            URL.revokeObjectURL(link.href);
+        });
+    </script>
+</body>
+</html>
