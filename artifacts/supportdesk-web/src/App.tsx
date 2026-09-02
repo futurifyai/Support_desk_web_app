@@ -300,8 +300,10 @@ function HelpArticlePage() {
 function RoutedErrorBoundary({ children }: { children: ReactNode }) { const [location] = useLocation(); return <ErrorBoundary resetKey={location}>{children}</ErrorBoundary>; }
 
 function Router() {
+  const [location] = useLocation();
   const token = localStorage.getItem(TOKEN_KEY);
   const profile = useGetProfile({ query: { enabled: Boolean(token), queryKey: getGetProfileQueryKey(), retry: false } });
+  void location;
   if (!token) return <Switch><Route path="/login" component={LoginPage} /><Route path="/" component={AuthPage} /><Route><Redirect to="/login" /></Route></Switch>;
   if (profile.isLoading) return <AuthPage />;
   if (profile.error || !profile.data?.data) return <Switch><Route path="/login" component={LoginPage} /><Route><SessionExpired /></Route></Switch>;
