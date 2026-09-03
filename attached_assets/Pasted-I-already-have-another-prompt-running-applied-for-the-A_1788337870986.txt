@@ -1,0 +1,26 @@
+I already have another prompt running/applied for the Admin "Access Control" section. Now please also audit and fix feature gaps in the customer/USER-facing section of the web app (artifacts/supportdesk-web) — I'm noticing things are missing there compared to the mobile app.
+
+## Reference: what the mobile app's user (customer) side supports
+Look at these files in `artifacts/supportdesk` for the source of truth on what a logged-in customer should be able to do:
+- `app/(tabs)/index.tsx` — **Create a new ticket**: subject/description, product picker (via `useGetMyProducts` — only shows products the user has approved access to), an **attachment upload** (image, via `useUploadTicketAttachment`), and suggested help articles while typing (`useGetSuggestedArticles`).
+- `app/(tabs)/history.tsx` — **Ticket history** list with filters (status, product, date range, etc.).
+- `app/(tabs)/help.tsx` — **Help center**: browse/search help articles (`useGetHelpArticles`).
+- `app/(tabs)/satisfaction.tsx` — **My ratings**: average rating given, rating distribution, and past written feedback the user left on resolved tickets.
+- `app/(tabs)/profile.tsx` — **Profile**: view and update name/email/password (`useUpdateProfile`).
+- `app/user-ticket/[id].tsx` — **Ticket detail** for a customer: view replies, add a reply, and rate/close a resolved ticket (`useRateTicket`).
+
+All of these use hooks already available in the shared `@workspace/api-client-react` package, which `artifacts/supportdesk-web` already depends on — so this should be frontend-only work, no backend/API changes needed unless you find a genuine gap.
+
+## What to do
+1. Go through the current web app's user-facing pages/components and compare against the list above.
+2. Tell me clearly, before changing anything, which of these are: (a) already present and working, (b) partially present but broken/incomplete, (c) completely missing.
+3. For anything missing or broken, build/fix it using the existing shared hooks — especially:
+   - Product picker restricted to the user's approved products when creating a ticket (`useGetMyProducts`) — this is easy to miss and just show all products instead, which would be wrong.
+   - Attachment upload on ticket creation and on replies.
+   - The ratings/satisfaction view for the customer.
+   - Full profile edit (not just view).
+4. Match the web app's existing design system (shadcn/radix components already used elsewhere in `artifacts/supportdesk-web`), don't copy mobile UI patterns 1:1.
+5. Don't touch `artifacts/supportdesk` (mobile), the database, or the API — additive frontend work only.
+6. Run `pnpm run typecheck` after and fix any errors.
+
+Give me the gap-analysis list first (step 2) before you start building, so I can confirm priorities.
