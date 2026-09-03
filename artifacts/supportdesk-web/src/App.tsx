@@ -29,6 +29,13 @@ import { ErrorBoundary } from '@/components/error-boundary';
 import { Toaster } from '@/components/ui/toaster';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import AccessControlPage from './access-control-page';
+import {
+  CustomerNewTicketPage,
+  CustomerSatisfactionPage,
+  CustomerSettingsPage,
+  CustomerTicketDetailPage,
+  CustomerTicketHistoryPage,
+} from './customer-pages';
 
 const queryClient = new QueryClient();
 const TOKEN_KEY = 'supportdesk.web.token';
@@ -91,6 +98,7 @@ const nav = [
   { href: '/customers', label: 'Customers', icon: Users, admin: true },
   { href: '/analytics', label: 'Analytics', icon: BarChart3, admin: true },
   { href: '/admin/access', label: 'Access control', icon: KeyRound, admin: true },
+  { href: '/satisfaction', label: 'My ratings', icon: Sparkles, customerOnly: true },
   { href: '/help', label: 'Help center', icon: BookOpen },
 ];
 
@@ -108,7 +116,7 @@ function Shell({ user, children }: { user: Profile; children: ReactNode }) {
         <div><div className="text-[15px] font-bold tracking-tight">support<span className="text-sidebar-primary">desk</span></div><div className="mono mt-0.5 text-[9px] uppercase tracking-[.18em] text-sidebar-foreground/45">ops console</div></div>
       </div>
       <div className="px-4 pb-3 pt-7"><div className="mono mb-2 px-3 text-[9px] font-bold uppercase tracking-[.18em] text-sidebar-foreground/40">Workspace</div>
-        <nav className="space-y-1">{nav.filter((item) => !item.admin || isAdmin).map((item) => { const Icon = item.icon; const active = location === item.href || (item.href === '/tickets' && location.startsWith('/tickets/')); return <Link key={item.href} href={item.href} onClick={() => setOpen(false)} className={`group flex items-center gap-3 rounded-md px-3 py-2.5 text-[13px] font-semibold transition-colors ${active ? 'bg-sidebar-primary text-sidebar-primary-foreground' : 'text-sidebar-foreground/65 hover:bg-sidebar-accent hover:text-sidebar-foreground'}`}><Icon size={17} strokeWidth={active ? 2.5 : 1.8} /><span>{item.label}</span>{item.label === 'Tickets' && <span className={`ml-auto rounded px-1.5 py-0.5 mono text-[10px] ${active ? 'bg-sidebar-primary-foreground/15' : 'bg-sidebar-accent'}`}>queue</span>}</Link>; })}</nav>
+       <nav className="space-y-1">{nav.filter((item) => (!item.admin || isAdmin) && (!item.customerOnly || !isAdmin)).map((item) => { const Icon = item.icon; const active = location === item.href || (item.href === '/tickets' && location.startsWith('/tickets/')); return <Link key={item.href} href={item.href} onClick={() => setOpen(false)} className={`group flex items-center gap-3 rounded-md px-3 py-2.5 text-[13px] font-semibold transition-colors ${active ? 'bg-sidebar-primary text-sidebar-primary-foreground' : 'text-sidebar-foreground/65 hover:bg-sidebar-accent hover:text-sidebar-foreground'}`}><Icon size={17} strokeWidth={active ? 2.5 : 1.8} /><span>{item.label}</span>{item.label === 'Tickets' && <span className={`ml-auto rounded px-1.5 py-0.5 mono text-[10px] ${active ? 'bg-sidebar-primary-foreground/15' : 'bg-sidebar-accent'}`}>queue</span>}</Link>; })}</nav>
       </div>
       <div className="mt-auto px-4 pb-4">
         <Link href="/new-ticket" onClick={() => setOpen(false)} className="mb-4 flex items-center justify-center gap-2 rounded-md border border-sidebar-primary/50 bg-sidebar-primary/10 px-3 py-2.5 text-xs font-bold text-sidebar-primary transition-colors hover:bg-sidebar-primary hover:text-sidebar-primary-foreground"><Plus size={15} />Submit a ticket</Link>
@@ -289,7 +297,7 @@ function CustomersRoute() { return null; }
 function AdminRoute({ children, user }: { children: ReactNode; user: Profile }) { return user.role === 'admin' ? <>{children}</> : <Redirect to="/tickets" />; }
 
 function ProtectedRouter({ user }: { user: Profile }) {
-  return <Shell user={user}><Switch><Route path="/dashboard"><AdminRoute user={user}><Dashboard /></AdminRoute></Route><Route path="/tickets/:ticketId"><TicketDetailPage user={user} /></Route><Route path="/tickets"><TicketsPage user={user} /></Route><Route path="/customers"><AdminRoute user={user}><CustomersPage /></AdminRoute></Route><Route path="/analytics"><AdminRoute user={user}><AnalyticsPage /></AdminRoute></Route><Route path="/admin/access"><AdminRoute user={user}><AccessControlPage /></AdminRoute></Route><Route path="/settings"><SettingsPage user={user} /></Route><Route path="/help"><HelpPage /></Route><Route path="/help/:slug"><HelpArticlePage /></Route><Route path="/new-ticket"><NewTicketPage /></Route><Route><Redirect to={user.role === 'admin' ? '/dashboard' : '/tickets'} /></Route></Switch></Shell>;
+  return <Shell user={user}><Switch><Route path="/dashboard"><AdminRoute user={user}><Dashboard /></AdminRoute></Route><Route path="/tickets/:ticketId">{user.role === 'admin' ? <TicketDetailPage user={user} /> : <CustomerTicketDetailPage user={user} />}</Route><Route path="/tickets">{user.role === 'admin' ? <TicketsPage user={user} /> : <CustomerTicketHistoryPage />}</Route><Route path="/customers"><AdminRoute user={user}><CustomersPage /></AdminRoute></Route><Route path="/analytics"><AdminRoute user={user}><AnalyticsPage /></AdminRoute></Route><Route path="/admin/access"><AdminRoute user={user}><AccessControlPage /></AdminRoute></Route><Route path="/satisfaction"><CustomerSatisfactionPage /></Route><Route path="/settings">{user.role === 'admin' ? <SettingsPage user={user} /> : <CustomerSettingsPage user={user} />}</Route><Route path="/help"><HelpPage /></Route><Route path="/help/:slug"><HelpArticlePage /></Route><Route path="/new-ticket">{user.role === 'admin' ? <NewTicketPage /> : <CustomerNewTicketPage />}</Route><Route><Redirect to={user.role === 'admin' ? '/dashboard' : '/tickets'} /></Route></Switch></Shell>;
 }
 
 function HelpArticlePage() {
