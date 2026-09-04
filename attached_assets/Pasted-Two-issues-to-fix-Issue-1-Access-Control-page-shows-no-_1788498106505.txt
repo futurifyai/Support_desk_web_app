@@ -1,0 +1,19 @@
+Two issues to fix:
+
+## Issue 1 — "Access Control" page shows no products to select
+When I try to grant a user access to a product, the product picker/dropdown is empty.
+
+Please diagnose:
+1. Show me exactly where the product list on this page comes from — is it `useGetDistinctProductNames` (derived from existing tickets' product field), a fixed `products` table, or something else?
+2. Check the actual database this project is connected to (`DATABASE_URL`) — run a query to see if there's any product-related data at all (e.g. distinct `product_name` values across `tickets` and `user_products` tables). Give me the count/result.
+3. If the database genuinely has no product data yet (likely because my earlier data import was incomplete), tell me clearly — don't silently show an empty dropdown with no explanation. Also tell me whether the import I did earlier (`supportdesk_full_backup.sql`) actually succeeded — give me row counts for every table right now so I can see what did and didn't come through.
+4. If the underlying issue is incomplete data (not a code bug), tell me that plainly instead of just patching the UI, so I know whether to re-do the database import.
+5. If the product field is meant to be free-text (admin can type any product name, not picked from a fixed list), then fix the UI to allow typing a new product name instead of only showing a dropdown that depends on existing data.
+
+## Issue 2 — general functionality gaps
+Please re-run a fresh comparison between the mobile app (`artifacts/supportdesk`) and the current state of the web app (`artifacts/supportdesk-web`), covering BOTH admin and customer/user sections this time, and give me a full updated list of:
+- What's now working correctly
+- What's still missing or broken
+- What looks broken specifically because of the data/import issue above vs. what's a genuine missing feature
+
+Give me both answers (Issue 1 root cause + Issue 2 full gap list) before making further changes, so I know if I need to fix the database import first.
