@@ -1,67 +1,97 @@
+// ─── Deep Space Command — Design System ────────────────────────────────────
+// A premium enterprise dark-mode design language for SupportDesk.
+// Electric blue primary · Cyan-green success · Deep navy surfaces
+// ────────────────────────────────────────────────────────────────────────────
+
 const colors = {
   light: {
-    text: "#0F172A",
-    tint: "#6366F1",
+    text: "#0D1B2A",
+    tint: "#2F80ED",
 
-    background: "#EEF2F7",
-    foreground: "#0F172A",
+    background: "#EEF4FB",
+    foreground: "#0D1B2A",
 
     card: "#FFFFFF",
-    cardForeground: "#0F172A",
+    cardForeground: "#0D1B2A",
 
-    primary: "#6366F1",
+    primary: "#2F80ED",
     primaryForeground: "#FFFFFF",
 
-    secondary: "#E2E8F0",
-    secondaryForeground: "#334155",
+    secondary: "#E0ECFB",
+    secondaryForeground: "#1A3A5C",
 
-    muted: "#E2E8F0",
-    mutedForeground: "#475569",
+    muted: "#E4EDF7",
+    mutedForeground: "#5A7A99",
 
-    accent: "#6366F1",
+    accent: "#2F80ED",
     accentForeground: "#FFFFFF",
 
     destructive: "#EF4444",
     destructiveForeground: "#FFFFFF",
 
-    success: "#22C55E",
+    success: "#00C49A",
     warning: "#F59E0B",
+    info: "#60A5FA",
 
-    border: "#CBD5E1",
-    input: "#E2E8F0",
+    border: "#C8DCF0",
+    input: "#E0ECFB",
   },
+
   dark: {
-    text: "#F1F5F9",
-    tint: "#6366F1",
+    // Backgrounds — layered navy depth
+    text: "#E8F0FE",
+    tint: "#3B9EFF",
 
-    background: "#0F172A",
-    foreground: "#F1F5F9",
+    background: "#060E1E",    // base — deepest navy
+    foreground: "#E8F0FE",
 
-    card: "#1E293B",
-    cardForeground: "#F1F5F9",
+    card: "#0B1629",           // surface — slightly lifted
+    cardForeground: "#E8F0FE",
 
-    primary: "#6366F1",
+    primary: "#2F80ED",        // electric blue
     primaryForeground: "#FFFFFF",
 
-    secondary: "#243447",
-    secondaryForeground: "#94A3B8",
+    secondary: "#0F1E35",      // raised panel bg
+    secondaryForeground: "#8AA3C8",
 
-    muted: "#1A2744",
-    mutedForeground: "#94A3B8",
+    muted: "#162036",          // inputs / subtle bg
+    mutedForeground: "#5A7A9B",
 
-    accent: "#6366F1",
+    accent: "#3B9EFF",         // hover / highlight accent
     accentForeground: "#FFFFFF",
 
     destructive: "#EF4444",
     destructiveForeground: "#FFFFFF",
 
-    success: "#22C55E",
-    warning: "#F59E0B",
+    success: "#00D4AA",        // cyan-green for resolved/approved
+    warning: "#F59E0B",        // amber for SLA warnings
+    info: "#60A5FA",           // soft blue for info
 
-    border: "#334155",
-    input: "#243447",
+    border: "rgba(255,255,255,0.07)",
+    borderHi: "rgba(47,128,237,0.35)",   // focused-input border
+    input: "#0F1E35",
   },
-  radius: 12,
+
+  // Shared semantic values used across both themes
+  priority: {
+    critical: "#EF4444",
+    high:     "#F97316",
+    medium:   "#2F80ED",
+    low:      "#445672",
+  },
+
+  // Glow/shadow presets for the dark mode cards
+  glow: {
+    primary: "rgba(47,128,237,0.28)",
+    success: "rgba(0,212,170,0.22)",
+    warning: "rgba(245,158,11,0.22)",
+    destructive: "rgba(239,68,68,0.22)",
+  },
+
+  radius: 14,
+  radiusSm: 8,
+  radiusLg: 20,
 };
+
 
 export default colors;

@@ -32,6 +32,8 @@ export const ticketsTable = pgTable("tickets", {
   slaEscalated: boolean("sla_escalated").notNull().default(false),
   resolvedAt: timestamp("resolved_at"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
+  closedAt: timestamp("closed_at"),
+  reminderSentAt: timestamp("reminder_sent_at"),
 });
 
 export const insertTicketSchema = createInsertSchema(ticketsTable).omit({

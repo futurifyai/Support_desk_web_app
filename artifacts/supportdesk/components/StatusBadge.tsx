@@ -4,28 +4,43 @@ import { Feather } from "@expo/vector-icons";
 
 type Status = "open" | "in-progress" | "resolved";
 
-const STATUS_CONFIG: Record<Status, { label: string; bg: string; text: string; border: string; icon: string }> = {
-  "open":        { label: "Open",        bg: "rgba(99,102,241,0.15)",  text: "#A5B4FC", border: "rgba(99,102,241,0.35)",  icon: "circle" },
-  "in-progress": { label: "In Progress", bg: "rgba(245,158,11,0.15)", text: "#FCD34D", border: "rgba(245,158,11,0.35)", icon: "clock" },
-  "resolved":    { label: "Resolved",    bg: "rgba(34,197,94,0.15)",  text: "#4ADE80", border: "rgba(34,197,94,0.35)",  icon: "check-circle" },
+// Deep Space Command — status color tokens
+const STATUS_CONFIG: Record<Status, {
+  label: string;
+  bg: string;
+  text: string;
+  border: string;
+  icon: keyof typeof Feather.glyphMap;
+}> = {
+  "open":        { label: "Open",        bg: "rgba(47,128,237,0.13)",  text: "#5AAEFF", border: "rgba(47,128,237,0.35)",  icon: "circle" },
+  "in-progress": { label: "In Progress", bg: "rgba(245,158,11,0.13)",  text: "#FCD34D", border: "rgba(245,158,11,0.35)", icon: "clock"  },
+  "resolved":    { label: "Resolved",    bg: "rgba(0,212,170,0.13)",   text: "#00D4AA", border: "rgba(0,212,170,0.35)",  icon: "check-circle" },
 };
 
-export default function StatusBadge({ status }: { status: Status }) {
-  const config = STATUS_CONFIG[status] ?? STATUS_CONFIG["open"];
-  const pulseAnim = useRef(new Animated.Value(1)).current;
-  const pulseOpacity = useRef(new Animated.Value(0.7)).current;
+interface StatusBadgeProps {
+  status: Status;
+  /** "sm" renders a compact pill (default), "md" renders a slightly larger one */
+  size?: "sm" | "md";
+}
 
+export default function StatusBadge({ status, size = "sm" }: StatusBadgeProps) {
+  const config = STATUS_CONFIG[status] ?? STATUS_CONFIG["open"];
+  const pulseAnim   = useRef(new Animated.Value(1)).current;
+  const pulseOpacity = useRef(new Animated.Value(0.65)).current;
+  const rotateAnim  = useRef(new Animated.Value(0)).current;
+
+  // open — pulsing dot animation
   useEffect(() => {
     if (status !== "open") return;
     const loop = Animated.loop(
       Animated.sequence([
         Animated.parallel([
-          Animated.timing(pulseAnim, { toValue: 1.5, duration: 900, useNativeDriver: true }),
-          Animated.timing(pulseOpacity, { toValue: 0, duration: 900, useNativeDriver: true }),
+          Animated.timing(pulseAnim,    { toValue: 1.6, duration: 950, useNativeDriver: true }),
+          Animated.timing(pulseOpacity, { toValue: 0,   duration: 950, useNativeDriver: true }),
         ]),
         Animated.parallel([
-          Animated.timing(pulseAnim, { toValue: 1, duration: 0, useNativeDriver: true }),
-          Animated.timing(pulseOpacity, { toValue: 0.7, duration: 0, useNativeDriver: true }),
+          Animated.timing(pulseAnim,    { toValue: 1, duration: 0, useNativeDriver: true }),
+          Animated.timing(pulseOpacity, { toValue: 0.65, duration: 0, useNativeDriver: true }),
         ]),
       ])
     );
@@ -33,8 +48,36 @@ export default function StatusBadge({ status }: { status: Status }) {
     return () => loop.stop();
   }, [status]);
 
+  // in-progress — slow rotating dash (visual only on native via opacity wave)
+  useEffect(() => {
+    if (status !== "in-progress") return;
+    const loop = Animated.loop(
+      Animated.sequence([
+        Animated.timing(rotateAnim, { toValue: 1, duration: 1400, useNativeDriver: true }),
+        Animated.timing(rotateAnim, { toValue: 0, duration: 0,    useNativeDriver: true }),
+      ])
+    );
+    loop.start();
+    return () => loop.stop();
+  }, [status]);
+
+  const isLg = size === "md";
+  const iconSize = isLg ? 12 : 10;
+  const fontSize = isLg ? 12 : 11;
+
+  const rotate = rotateAnim.interpolate({ inputRange: [0, 1], outputRange: ["0deg", "360deg"] });
+
   return (
-    <View style={[styles.badge, { backgroundColor: config.bg, borderColor: config.border }]}>
+    <View style={[
+      styles.badge,
+      {
+        backgroundColor: config.bg,
+        borderColor: config.border,
+        paddingHorizontal: isLg ? 11 : 9,
+        paddingVertical:   isLg ? 5  : 4,
+        borderRadius: isLg ? 8 : 6,
+      },
+    ]}>
       {status === "open" ? (
         <View style={styles.dotWrapper}>
           <Animated.View
@@ -45,10 +88,14 @@ export default function StatusBadge({ status }: { status: Status }) {
           />
           <View style={[styles.dotCore, { backgroundColor: config.text }]} />
         </View>
+      ) : status === "in-progress" ? (
+        <Animated.View style={{ transform: [{ rotate }] }}>
+          <Feather name="clock" size={iconSize} color={config.text} />
+        </Animated.View>
       ) : (
-        <Feather name={config.icon as "clock" | "check-circle"} size={10} color={config.text} />
+        <Feather name="check-circle" size={iconSize} color={config.text} />
       )}
-      <Text style={[styles.label, { color: config.text }]}>{config.label}</Text>
+      <Text style={[styles.label, { color: config.text, fontSize }]}>{config.label}</Text>
     </View>
   );
 }
@@ -58,14 +105,12 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 5,
-    paddingHorizontal: 9,
-    paddingVertical: 4,
-    borderRadius: 6,
     borderWidth: 1,
     alignSelf: "flex-start",
   },
-  label: { fontSize: 11, fontWeight: "600" as const, fontFamily: "Inter_600SemiBold" },
+  label: { fontWeight: "600" as const, fontFamily: "Inter_600SemiBold", letterSpacing: 0.2 },
   dotWrapper: { width: 10, height: 10, alignItems: "center", justifyContent: "center" },
-  dotPulse: { position: "absolute", width: 10, height: 10, borderRadius: 5 },
-  dotCore: { width: 6, height: 6, borderRadius: 3 },
+  dotPulse:   { position: "absolute", width: 10, height: 10, borderRadius: 5 },
+  dotCore:    { width: 6, height: 6, borderRadius: 3 },
 });
+

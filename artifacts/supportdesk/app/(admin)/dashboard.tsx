@@ -166,10 +166,10 @@ export default function AdminDashboard() {
         contentContainerStyle={{ paddingBottom: isDesktopWeb ? 34 : insets.bottom + 110 }}
       >
         <Animated.View style={[s.statsRow, { opacity: statsOpacity, transform: [{ translateY: statsY }] }]}>
-          <StatCard label="Total"       value={allTickets.length}  valueColor={colors.foreground}  accentColor={colors.border}           isDark={isDark} />
-          <StatCard label="Open"        value={openCount}          valueColor="#A5B4FC"             accentColor="rgba(99,102,241,0.5)"   isDark={isDark} />
-          <StatCard label="In Progress" value={inProgressCount}    valueColor="#FCD34D"             accentColor="rgba(245,158,11,0.5)"   isDark={isDark} />
-          <StatCard label="Resolved"    value={resolvedCount}      valueColor="#4ADE80"             accentColor="rgba(34,197,94,0.5)"    isDark={isDark} />
+          <StatCard label="Total"       value={allTickets.length}  valueColor={colors.foreground}  accentColor={isDark ? "rgba(255,255,255,0.12)" : colors.border} isDark={isDark} />
+          <StatCard label="Open"        value={openCount}          valueColor="#5AAEFF"             accentColor="rgba(47,128,237,0.55)"  isDark={isDark} />
+          <StatCard label="In Progress" value={inProgressCount}    valueColor="#FCD34D"             accentColor="rgba(245,158,11,0.55)"  isDark={isDark} />
+          <StatCard label="Resolved"    value={resolvedCount}      valueColor="#00D4AA"             accentColor="rgba(0,212,170,0.55)"   isDark={isDark} />
         </Animated.View>
 
         <Animated.View style={{ opacity: tableOpacity, transform: [{ translateY: tableY }] }}>
@@ -339,7 +339,7 @@ export default function AdminDashboard() {
                   filtered.map((ticket, idx) => (
                     <TouchableOpacity
                       key={ticket.id}
-                      style={[s.tableRow, idx % 2 === 1 && { backgroundColor: isDark ? "#1A2744" : "#F8FAFC" }]}
+                      style={[s.tableRow, idx % 2 === 1 && { backgroundColor: isDark ? "rgba(15,30,53,0.60)" : "#F4F8FD" }]}
                       onPress={() => router.push(`/(admin)/ticket/${ticket.id}`)}
                       activeOpacity={0.6}
                     >
@@ -399,21 +399,26 @@ function StatCard({ label, value, valueColor, accentColor, isDark }: {
   return (
     <View style={[statS.card, {
       borderTopColor: accentColor,
-      backgroundColor: isDark ? "#1E293B" : "#FFFFFF",
-      borderColor: isDark ? "#334155" : "#E2E8F0",
+      backgroundColor: isDark ? "#0B1629" : "#FFFFFF",
+      borderColor: isDark ? "rgba(255,255,255,0.07)" : "#C8DCF0",
+      shadowColor: valueColor,
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: isDark ? 0.14 : 0.07,
+      shadowRadius: 8,
+      elevation: 2,
     }]}>
       <AnimatedCounter
         value={value}
         color={valueColor}
-        style={{ fontSize: 20, fontWeight: "700", fontFamily: "Inter_700Bold" }}
+        style={{ fontSize: 22, fontWeight: "700", fontFamily: "Inter_700Bold" }}
       />
-      <Text style={[statS.label, { color: isDark ? "#64748B" : "#94A3B8" }]}>{label}</Text>
+      <Text style={[statS.label, { color: isDark ? "#445672" : "#7A9FC4" }]}>{label}</Text>
     </View>
   );
 }
 const statS = StyleSheet.create({
-  card: { flex: 1, borderRadius: 10, borderWidth: 1, borderTopWidth: 2, padding: 12, alignItems: "center" },
-  label: { fontSize: 11, fontFamily: "Inter_400Regular", marginTop: 2 },
+  card: { flex: 1, borderRadius: 12, borderWidth: 1, borderTopWidth: 3, padding: 14, alignItems: "center" },
+  label: { fontSize: 11, fontFamily: "Inter_500Medium", marginTop: 3, letterSpacing: 0.3 },
 });
 
 function makeStyles(colors: ReturnType<typeof useColors>, isDark: boolean) {
@@ -485,7 +490,7 @@ function makeStyles(colors: ReturnType<typeof useColors>, isDark: boolean) {
     sortBar: { minHeight: 38, flexDirection: "row", alignItems: "center", gap: 5, paddingHorizontal: 11, borderBottomWidth: 1, borderBottomColor: colors.border },
     sortLabel: { color: colors.mutedForeground, fontSize: 10, fontFamily: "Inter_500Medium", marginRight: 1 },
     sortButton: { flexDirection: "row", alignItems: "center", gap: 2, paddingHorizontal: 6, paddingVertical: 4, borderRadius: 5 },
-    sortButtonActive: { backgroundColor: isDark ? "rgba(99,102,241,0.14)" : "rgba(99,102,241,0.08)" },
+    sortButtonActive: { backgroundColor: isDark ? "rgba(47,128,237,0.14)" : "rgba(47,128,237,0.10)" },
     sortButtonText: { color: colors.mutedForeground, fontSize: 10, fontFamily: "Inter_500Medium" },
     sortButtonTextActive: { color: colors.primary, fontFamily: "Inter_700Bold" },
     desktopQueueScroll: { flex: 1 },
@@ -498,7 +503,7 @@ function makeStyles(colors: ReturnType<typeof useColors>, isDark: boolean) {
       position: "relative",
     },
     queueRowSelected: {
-      backgroundColor: isDark ? "rgba(99,102,241,0.14)" : "rgba(99,102,241,0.08)",
+      backgroundColor: isDark ? "rgba(47,128,237,0.13)" : "rgba(47,128,237,0.08)",
       borderLeftWidth: 3,
       borderLeftColor: colors.primary,
       paddingLeft: 12,

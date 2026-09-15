@@ -1,20 +1,24 @@
 import React, { type ReactNode } from "react";
-import { ActivityIndicator, StyleSheet, Text, TouchableOpacity, useWindowDimensions, View } from "react-native";
+import {
+  ActivityIndicator, Platform, StyleSheet, Text,
+  TouchableOpacity, useWindowDimensions, View,
+} from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useAuth } from "@/contexts/AuthContext";
-import { useTheme } from "@/contexts/ThemeContext";
 import { useColors } from "@/hooks/useColors";
 import ThemeToggle from "@/components/ThemeToggle";
 
 type IconName = keyof typeof Feather.glyphMap;
 
+// ── Icon button used in the header right area ─────────────────────────────
 interface AdminHeaderIconButtonProps {
   icon: IconName;
   onPress: () => void;
   accessibilityLabel: string;
   disabled?: boolean;
   loading?: boolean;
+  tint?: string;
 }
 
 export function AdminHeaderIconButton({
@@ -23,28 +27,55 @@ export function AdminHeaderIconButton({
   accessibilityLabel,
   disabled = false,
   loading = false,
+  tint,
 }: AdminHeaderIconButtonProps) {
   const colors = useColors();
-  const { isDark } = useTheme();
-  const styles = makeStyles(colors, isDark);
+  const isDark = colors.isDark;
 
   return (
     <TouchableOpacity
       accessibilityRole="button"
       accessibilityLabel={accessibilityLabel}
-      style={styles.iconBtn}
+      style={[
+        styles.iconBtn,
+        {
+          backgroundColor: isDark ? "rgba(255,255,255,0.06)" : colors.secondary,
+          borderColor: isDark ? "rgba(255,255,255,0.10)" : colors.border,
+        },
+      ]}
       onPress={onPress}
       disabled={disabled}
-      activeOpacity={0.68}
+      activeOpacity={0.65}
       hitSlop={4}
     >
       {loading
-        ? <ActivityIndicator size="small" color={colors.foreground} />
-        : <Feather name={icon} size={15} color={colors.foreground} />}
+        ? <ActivityIndicator size="small" color={tint ?? colors.foreground} />
+        : <Feather name={icon} size={16} color={tint ?? colors.foreground} />}
     </TouchableOpacity>
   );
 }
 
+// ── Avatar initials bubble ────────────────────────────────────────────────
+function AvatarBubble({ name }: { name: string }) {
+  const initials = name
+    .split(" ")
+    .slice(0, 2)
+    .map((w) => w[0])
+    .join("")
+    .toUpperCase();
+
+  return (
+    <View style={styles.avatarWrap}>
+      <View style={styles.avatar}>
+        <Text style={styles.avatarText}>{initials}</Text>
+      </View>
+      {/* Online indicator */}
+      <View style={styles.onlineDot} />
+    </View>
+  );
+}
+
+// ── AdminHeader ───────────────────────────────────────────────────────────
 interface AdminHeaderProps {
   title: string;
   subtitle?: string;
@@ -62,107 +93,168 @@ export default function AdminHeader({
   showThemeToggle = true,
   showAccountActions = true,
 }: AdminHeaderProps) {
-  const colors = useColors();
-  const { isDark } = useTheme();
+  const colors  = useColors();
+  const isDark  = colors.isDark;
   const { user, logout } = useAuth();
-  const router = useRouter();
+  const router  = useRouter();
   const { width } = useWindowDimensions();
-  const styles = makeStyles(colors, isDark);
-  const identity = subtitle ?? `${user?.name ?? "Admin"} · ${user?.email ?? "—"}`;
   const isCompact = width < 480;
 
+  const identity = subtitle ?? `${user?.name ?? "Admin"} · ${user?.email ?? "—"}`;
+
+  // Bottom border glow on dark mode
+  const bottomBorderStyle = isDark
+    ? { borderBottomColor: "rgba(47,128,237,0.14)", borderBottomWidth: 1 }
+    : { borderBottomColor: colors.border, borderBottomWidth: 1 };
+
+  const webGlow = Platform.OS === "web" && isDark
+    ? ({ boxShadow: "0 1px 0 rgba(47,128,237,0.13), 0 4px 18px rgba(0,0,0,0.5)" } as object)
+    : {};
+
   return (
-    <View style={[styles.header, isCompact && styles.headerCompact]}>
+    <View
+      style={[
+        styles.header,
+        isCompact && styles.headerCompact,
+        { backgroundColor: isDark ? colors.background : "#FFFFFF" },
+        bottomBorderStyle,
+        webGlow,
+      ]}
+    >
       {leadingAction}
+
+      {/* Left — badge + title + sub */}
       <View style={[styles.headerLeft, isCompact && styles.headerLeftCompact]}>
-        <View style={styles.adminPill}>
-          <Feather name="shield" size={9} color="#A5B4FC" />
-          <Text style={styles.adminPillText}>ADMIN</Text>
+        <View style={styles.adminBadgeRow}>
+          <View style={styles.adminPill}>
+            <Feather name="shield" size={9} color="#2F80ED" />
+            <Text style={styles.adminPillText}>ADMIN</Text>
+          </View>
         </View>
-        <Text style={styles.headerTitle}>{title}</Text>
-        <Text style={styles.headerSub} numberOfLines={2}>{identity}</Text>
+        <Text style={[styles.title, { color: colors.foreground }]}>
+          {title}
+        </Text>
+        <Text style={[styles.sub, { color: isDark ? "#5A7A9B" : colors.mutedForeground }]} numberOfLines={1}>
+          {identity}
+        </Text>
       </View>
+
+      {/* Right — actions + toggle + avatar */}
       <View style={[styles.headerRight, isCompact && styles.headerRightCompact]}>
         {rightActions}
-        {showThemeToggle ? <ThemeToggle size={36} /> : null}
-        {showAccountActions ? (
+        {showThemeToggle && <ThemeToggle size={36} />}
+        {showAccountActions && (
           <>
             <AdminHeaderIconButton
               icon="user"
               accessibilityLabel="Open admin profile"
               onPress={() => router.navigate("/(admin)/profile" as never)}
             />
-            <AdminHeaderIconButton icon="log-out" accessibilityLabel="Sign out" onPress={logout} />
+            <AdminHeaderIconButton
+              icon="log-out"
+              accessibilityLabel="Sign out"
+              onPress={logout}
+              tint={isDark ? "#EF4444" : undefined}
+            />
           </>
-        ) : null}
+        )}
+        {/* Avatar shown when compact layout hides the sub-line */}
+        {showAccountActions && !isCompact && user?.name && (
+          <AvatarBubble name={user.name} />
+        )}
       </View>
     </View>
   );
 }
 
-function makeStyles(colors: ReturnType<typeof useColors>, isDark: boolean) {
-  return StyleSheet.create({
-    header: {
-      flexDirection: "row",
-      alignItems: "center",
-      justifyContent: "space-between",
-      gap: 12,
-      paddingHorizontal: 20,
-      paddingVertical: 14,
-      backgroundColor: colors.background,
-      borderBottomWidth: 1,
-      borderBottomColor: colors.border,
-    },
-    headerCompact: { flexWrap: "wrap", alignItems: "stretch" },
-    headerLeft: { flex: 1, gap: 3, minWidth: 0 },
-    headerLeftCompact: { flexBasis: "100%" },
-    adminPill: {
-      flexDirection: "row",
-      alignItems: "center",
-      gap: 4,
-      backgroundColor: "rgba(99,102,241,0.15)",
-      borderWidth: 1,
-      borderColor: "rgba(99,102,241,0.3)",
-      borderRadius: 5,
-      paddingHorizontal: 7,
-      paddingVertical: 3,
-      alignSelf: "flex-start",
-      marginBottom: 3,
-    },
-    adminPillText: {
-      fontSize: 10,
-      fontFamily: "Inter_700Bold",
-      color: "#A5B4FC",
-      letterSpacing: 0.8,
-    },
-    headerTitle: {
-      fontSize: 21,
-      lineHeight: 25,
-      fontFamily: "Inter_700Bold",
-      color: colors.foreground,
-    },
-    headerSub: {
-      fontSize: 13,
-      lineHeight: 18,
-      fontFamily: "Inter_400Regular",
-      color: isDark ? "#CBD5E1" : colors.mutedForeground,
-    },
-    headerRight: { flexDirection: "row", alignItems: "center", gap: 8, flexShrink: 0 },
-    headerRightCompact: { width: "100%", justifyContent: "flex-end", marginTop: 6 },
-    iconBtn: {
-      width: 36,
-      height: 36,
-      borderRadius: 10,
-      backgroundColor: isDark ? "rgba(255,255,255,0.08)" : colors.secondary,
-      borderWidth: 1,
-      borderColor: isDark ? "rgba(255,255,255,0.14)" : colors.border,
-      alignItems: "center",
-      justifyContent: "center",
-      shadowColor: isDark ? "#000000" : "#94A3B8",
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: isDark ? 0.24 : 0.12,
-      shadowRadius: 5,
-      elevation: 2,
-    },
-  });
-}
+const styles = StyleSheet.create({
+  header: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 12,
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+  },
+  headerCompact: { flexWrap: "wrap", alignItems: "stretch" },
+
+  headerLeft: { flex: 1, gap: 2, minWidth: 0 },
+  headerLeftCompact: { flexBasis: "100%" },
+
+  adminBadgeRow: { marginBottom: 3 },
+  adminPill: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    backgroundColor: "rgba(47,128,237,0.12)",
+    borderWidth: 1,
+    borderColor: "rgba(47,128,237,0.28)",
+    borderRadius: 5,
+    paddingHorizontal: 7,
+    paddingVertical: 2,
+    alignSelf: "flex-start",
+  },
+  adminPillText: {
+    fontSize: 10,
+    fontFamily: "Inter_700Bold",
+    color: "#3B9EFF",
+    letterSpacing: 1,
+  },
+  title: {
+    fontSize: 21,
+    lineHeight: 26,
+    fontFamily: "Inter_700Bold",
+    letterSpacing: -0.3,
+  },
+  sub: {
+    fontSize: 13,
+    lineHeight: 18,
+    fontFamily: "Inter_400Regular",
+  },
+
+  headerRight: { flexDirection: "row", alignItems: "center", gap: 8, flexShrink: 0 },
+  headerRightCompact: { width: "100%", justifyContent: "flex-end", marginTop: 8 },
+
+  iconBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    borderWidth: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.18,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+
+  avatarWrap: { position: "relative", marginLeft: 4 },
+  avatar: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: "#2F80ED",
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 2,
+    borderColor: "rgba(47,128,237,0.45)",
+  },
+  avatarText: {
+    fontSize: 13,
+    fontFamily: "Inter_700Bold",
+    color: "#FFFFFF",
+    letterSpacing: 0.4,
+  },
+  onlineDot: {
+    position: "absolute",
+    bottom: 1,
+    right: 1,
+    width: 9,
+    height: 9,
+    borderRadius: 5,
+    backgroundColor: "#00D4AA",
+    borderWidth: 1.5,
+    borderColor: "#060E1E",
+  },
+});

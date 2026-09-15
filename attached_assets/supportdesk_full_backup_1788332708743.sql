@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict Peef7RPClqFGU9l2Tz0Zs9OBhUX1PTS8SRirafTV7weAVMToFsIUus2Hyu6PDK7
+-- \restrict Peef7RPClqFGU9l2Tz0Zs9OBhUX1PTS8SRirafTV7weAVMToFsIUus2Hyu6PDK7
 
 -- Dumped from database version 16.10
 -- Dumped by pg_dump version 16.10
